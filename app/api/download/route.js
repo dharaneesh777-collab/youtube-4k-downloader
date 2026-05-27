@@ -1,17 +1,24 @@
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { unlink, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import { execSync } from 'child_process';
 import path from 'path';
 import crypto from 'crypto';
 
-function findBinary(name, nodeModulePath, nodeModulePathLinux) {
-  if (existsSync(nodeModulePath)) return nodeModulePath;
-  if (existsSync(nodeModulePathLinux)) return nodeModulePathLinux;
+function findBinary(name, winModulePath, linModulePath) {
+  // 1. System PATH first (Docker)
   try {
-    const sysPath = execSync(`which ${name} 2>/dev/null || where ${name} 2>nul`, { encoding: 'utf8' }).trim().split('\n')[0];
-    if (sysPath) return sysPath;
+    const p = execSync(`which ${name} 2>/dev/null`, { encoding: 'utf8' }).trim();
+    if (p) return p;
   } catch {}
+  try {
+    const p = execSync(`where ${name} 2>nul`, { encoding: 'utf8' }).trim().split('\n')[0];
+    if (p) return p;
+  } catch {}
+
+  // 2. node_modules (local dev)
+  if (existsSync(winModulePath)) return winModulePath;
+  if (existsSync(linModulePath)) return linModulePath;
+
   return name;
 }
 
@@ -21,7 +28,7 @@ const ytdlpPath = findBinary(
   path.join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', 'yt-dlp')
 );
 
-const ffmpegPathResolved = findBinary(
+const ffmpegPath = findBinary(
   'ffmpeg',
   path.join(process.cwd(), 'node_modules', 'ffmpeg-static', 'ffmpeg.exe'),
   path.join(process.cwd(), 'node_modules', 'ffmpeg-static', 'ffmpeg')
@@ -54,7 +61,7 @@ export async function GET(request) {
         '-f', format,
         '--merge-output-format', 'mp4',
         '-o', outputPath,
-        '--ffmpeg-location', ffmpegPathResolved,
+        '--ffmpeg-location', ffmpegPath,
         '--no-warnings',
         '--no-call-home',
         '--no-check-certificate',
