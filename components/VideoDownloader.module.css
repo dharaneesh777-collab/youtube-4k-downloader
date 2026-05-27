@@ -1,7 +1,7 @@
 .form {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 @media (max-width: 600px) {
@@ -43,176 +43,87 @@
 }
 
 .title {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
+  margin: 0 0 0.35rem 0;
+  font-size: 1.2rem;
   line-height: 1.4;
 }
 
-.duration {
+.author {
   color: var(--text-secondary);
-  margin: 0;
-}
-
-/* ====== Cookie Upload ====== */
-
-.cookieBanner {
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px solid rgba(251, 191, 36, 0.25);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  animation: fadeIn 0.3s ease;
-}
-
-.cookieInfo {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
-
-.cookieIcon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.cookieTitle {
-  font-weight: 600;
-  color: #fbbf24;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 1rem 0;
   font-size: 0.9rem;
 }
 
-.cookieDesc {
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  margin: 0;
-  line-height: 1.5;
-}
+/* ====== Quality Grid ====== */
 
-.cookieLink {
-  color: var(--accent-color);
-  text-decoration: underline;
-}
-
-.cookieActions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.cookieClose {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0.25rem;
-}
-
-.cookieClose:hover {
-  color: white;
-}
-
-.cookieToggle {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.cookieToggle:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* ====== Progress UI ====== */
-
-.progressContainer {
-  margin-top: 1rem;
+.qualityGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
   animation: fadeIn 0.3s ease;
 }
 
-.phaseLabel {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--accent-color);
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.progressBarTrack {
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.progressBarFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--gradient-1), var(--gradient-2));
-  border-radius: 999px;
-  transition: width 0.4s ease;
-  position: relative;
-}
-
-.progressBarFill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.25) 50%,
-    transparent 100%
-  );
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.progressBarPulse {
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-.statsRow {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.statItem {
+.qualityBtn {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
   background: rgba(255, 255, 255, 0.05);
-  padding: 0.35rem 0.65rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
 }
 
-.statIcon {
+.qualityBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-color);
+  transform: translateY(-1px);
+}
+
+.qualityBtnPrimary {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.qualityBtnPrimary:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(139, 92, 246, 0.25));
+  border-color: var(--accent-color);
+}
+
+.qualityBadge {
+  background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* ====== Fetching / Loading ====== */
+
+.fetchingContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.fetchingSpinner {
+  flex-shrink: 0;
+}
+
+.fetchingText {
+  color: var(--text-secondary);
+  margin: 0;
   font-size: 0.9rem;
 }
 
@@ -233,17 +144,14 @@
   color: #4ade80;
   font-weight: 600;
   margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
 }
 
 .retryBtn {
   display: inline-block;
   text-decoration: none;
   text-align: center;
-}
-
-.errorContainer {
-  margin-top: 1rem;
-  animation: fadeIn 0.3s ease;
+  font-size: 0.9rem;
 }
 
 @keyframes fadeIn {

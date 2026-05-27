@@ -1,32 +1,18 @@
 import { NextResponse } from 'next/server';
-import { execSync, execFileSync } from 'child_process';
-import path from 'path';
-import { existsSync } from 'fs';
 
-function findYtDlp() {
-  try {
-    const p = execSync('which yt-dlp 2>/dev/null', { encoding: 'utf8' }).trim();
-    if (p) return p;
-  } catch {}
-  try {
-    const p = execSync('where yt-dlp 2>nul', { encoding: 'utf8' }).trim().split('\n')[0];
-    if (p) return p;
-  } catch {}
-
-  const winBin = path.join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', 'yt-dlp.exe');
-  if (existsSync(winBin)) return winBin;
-  const linBin = path.join(process.cwd(), 'node_modules', 'youtube-dl-exec', 'bin', 'yt-dlp');
-  if (existsSync(linBin)) return linBin;
-
-  return 'yt-dlp';
+function extractVideoId(url) {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
 }
-
-function getCookiesPath() {
-  const p = path.join(process.cwd(), 'cookies', 'cookies.txt');
-  return existsSync(p) ? p : null;
-}
-
-const ytdlpPath = findYtDlp();
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -37,36 +23,29 @@ export async function GET(request) {
   }
 
   try {
-    const args = [
-      url,
-      '--dump-single-json',
-      '--no-warnings',
-    ];
+    // Use YouTube oEmbed API — works from any IP, no auth needed
+    const oembedRes = await fetch(
+      `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`
+    );
 
-    const cookiesPath = getCookiesPath();
-    if (cookiesPath) {
-      args.push('--cookies', cookiesPath);
+    if (!oembedRes.ok) {
+      return NextResponse.json({ error: 'Invalid YouTube URL or video not found' }, { status: 400 });
     }
 
-    const stdout = execFileSync(ytdlpPath, args, {
-      encoding: 'utf8',
-      maxBuffer: 10 * 1024 * 1024,
-      timeout: 30000,
+    const oembed = await oembedRes.json();
+    const videoId = extractVideoId(url);
+
+    return NextResponse.json({
+      title: oembed.title,
+      author: oembed.author_name,
+      thumbnail: videoId
+        ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+        : oembed.thumbnail_url,
+      thumbnailFallback: oembed.thumbnail_url,
+      videoId,
     });
-
-    const info = JSON.parse(stdout);
-    return NextResponse.json(info);
   } catch (error) {
-    const errMsg = error.stderr || error.message || '';
-    console.error('Error fetching video info:', errMsg);
-
-    if (errMsg.includes('Sign in') || errMsg.includes('cookies')) {
-      return NextResponse.json({
-        error: 'YouTube requires authentication. Please upload your browser cookies using the cookie button above.',
-        needsCookies: true,
-      }, { status: 403 });
-    }
-
+    console.error('Error fetching video info:', error);
     return NextResponse.json({ error: 'Failed to fetch video information' }, { status: 500 });
   }
 }
