@@ -39,8 +39,8 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Create temp directory for downloads
-RUN mkdir -p .temp
+# Create temp and cookies directories
+RUN mkdir -p .temp cookies
 
 EXPOSE 3000
 

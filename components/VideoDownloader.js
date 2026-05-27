@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styles from './VideoDownloader.module.css';
 
 export default function VideoDownloader() {
@@ -9,7 +9,29 @@ export default function VideoDownloader() {
   const [videoInfo, setVideoInfo] = useState(null);
   const [error, setError] = useState('');
   const [downloadState, setDownloadState] = useState(null);
-  // downloadState: { status, phase, percent, speed, totalSize, eta, downloadUrl }
+  const [showCookieUpload, setShowCookieUpload] = useState(false);
+  const [cookieStatus, setCookieStatus] = useState('');
+  const fileInputRef = useRef(null);
+
+  const uploadCookies = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setCookieStatus('uploading');
+    const formData = new FormData();
+    formData.append('cookies', file);
+
+    try {
+      const res = await fetch('/api/cookies', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setCookieStatus('success');
+      setError('');
+      setTimeout(() => setShowCookieUpload(false), 2000);
+    } catch (err) {
+      setCookieStatus('error');
+    }
+  };
 
   const fetchInfo = async (e) => {
     e.preventDefault();
@@ -22,7 +44,12 @@ export default function VideoDownloader() {
     try {
       const res = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch info');
+      if (!res.ok) {
+        if (data.needsCookies) {
+          setShowCookieUpload(true);
+        }
+        throw new Error(data.error || 'Failed to fetch info');
+      }
       setVideoInfo(data);
     } catch (err) {
       setError(err.message);
@@ -69,7 +96,6 @@ export default function VideoDownloader() {
             percent: '100%',
           }));
           evtSource.close();
-          // Auto-trigger browser download
           const a = document.createElement('a');
           a.href = data.downloadUrl;
           a.setAttribute('download', '');
@@ -77,20 +103,14 @@ export default function VideoDownloader() {
           a.click();
           document.body.removeChild(a);
         } else if (data.type === 'error') {
-          setDownloadState(prev => ({
-            ...prev,
-            status: 'error',
-          }));
+          setDownloadState(prev => ({ ...prev, status: 'error' }));
           evtSource.close();
         }
-      } catch (e) {
-        // ignore parse errors
-      }
+      } catch (e) {}
     };
 
     evtSource.onerror = () => {
       evtSource.close();
-      // Only set error if we haven't completed
       setDownloadState(prev => {
         if (prev?.status === 'done') return prev;
         return { ...prev, status: 'error' };
@@ -113,6 +133,33 @@ export default function VideoDownloader() {
 
   return (
     <div className="glass-panel" style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+
+      {/* Cookie Upload Banner */}
+      {showCookieUpload && (
+        <div className={styles.cookieBanner}>
+          <div className={styles.cookieInfo}>
+            <span className={styles.cookieIcon}>🍪</span>
+            <div>
+              <p className={styles.cookieTitle}>YouTube requires authentication</p>
+              <p className={styles.cookieDesc}>
+                Export cookies from your browser using a{' '}
+                <a href="https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank" rel="noopener noreferrer" className={styles.cookieLink}>
+                  cookies.txt extension
+                </a>
+                {' '}while logged into YouTube, then upload the file here.
+              </p>
+            </div>
+          </div>
+          <div className={styles.cookieActions}>
+            <input type="file" ref={fileInputRef} accept=".txt" onChange={uploadCookies} style={{ display: 'none' }} />
+            <button className="btn-primary" onClick={() => fileInputRef.current?.click()} style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+              {cookieStatus === 'uploading' ? 'Uploading...' : cookieStatus === 'success' ? '✅ Uploaded!' : 'Upload cookies.txt'}
+            </button>
+            <button onClick={() => setShowCookieUpload(false)} className={styles.cookieClose}>✕</button>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={fetchInfo} className={styles.form}>
         <input
           type="url"
@@ -126,6 +173,13 @@ export default function VideoDownloader() {
           {loading ? <div className="spinner"></div> : 'Fetch Video'}
         </button>
       </form>
+
+      {/* Cookie toggle button */}
+      <div style={{ textAlign: 'center', marginBottom: error ? '0' : '0.5rem' }}>
+        <button onClick={() => setShowCookieUpload(!showCookieUpload)} className={styles.cookieToggle}>
+          🍪 {showCookieUpload ? 'Hide' : 'Cookie Settings'}
+        </button>
+      </div>
 
       {error && <p className={styles.error}>{error}</p>}
 

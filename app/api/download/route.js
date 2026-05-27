@@ -5,7 +5,6 @@ import path from 'path';
 import crypto from 'crypto';
 
 function findBinary(name, winModulePath, linModulePath) {
-  // 1. System PATH first (Docker)
   try {
     const p = execSync(`which ${name} 2>/dev/null`, { encoding: 'utf8' }).trim();
     if (p) return p;
@@ -15,11 +14,15 @@ function findBinary(name, winModulePath, linModulePath) {
     if (p) return p;
   } catch {}
 
-  // 2. node_modules (local dev)
   if (existsSync(winModulePath)) return winModulePath;
   if (existsSync(linModulePath)) return linModulePath;
 
   return name;
+}
+
+function getCookiesPath() {
+  const p = path.join(process.cwd(), 'cookies', 'cookies.txt');
+  return existsSync(p) ? p : null;
 }
 
 const ytdlpPath = findBinary(
@@ -63,11 +66,14 @@ export async function GET(request) {
         '-o', outputPath,
         '--ffmpeg-location', ffmpegPath,
         '--no-warnings',
-        '--no-call-home',
-        '--no-check-certificate',
         '--newline',
         '--progress-template', '%(progress._percent_str)s|%(progress._speed_str)s|%(progress._total_bytes_str)s|%(progress._eta_str)s',
       ];
+
+      const cookiesPath = getCookiesPath();
+      if (cookiesPath) {
+        args.push('--cookies', cookiesPath);
+      }
 
       const proc = spawn(ytdlpPath, args, { windowsHide: true });
 
@@ -123,7 +129,7 @@ export async function GET(request) {
         if (code === 0) {
           sendEvent({ type: 'done', downloadUrl: `/api/file?path=${encodeURIComponent(jobId)}` });
         } else {
-          sendEvent({ type: 'error', message: 'Download failed' });
+          sendEvent({ type: 'error', message: 'Download failed. You may need to upload browser cookies.' });
           unlink(outputPath).catch(() => {});
         }
         controller.close();
