@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  output: 'standalone',
+  serverExternalPackages: ['youtube-dl-exec', 'ffmpeg-static'],
 };
 
 export default nextConfig;

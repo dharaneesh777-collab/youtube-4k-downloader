@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: youtube-4k-downloader
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
